@@ -3,3 +3,4 @@ jigsaw==3.2.0
 python-dotenv==0.10.1
 beautifulsoup4==4.7.1
 requests==2.21.0
+lxml==4.3.3
