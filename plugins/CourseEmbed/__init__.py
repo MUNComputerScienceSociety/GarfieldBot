@@ -1,6 +1,7 @@
 import re
 import os
 import json
+import logging
 
 import requests
 from bs4 import BeautifulSoup
@@ -15,13 +16,24 @@ class CourseEmbed(GarfieldPlugin):
 
     def __init__(self, manifest, bot):
         super().__init__(manifest, bot)
+        self._logger = logging.getLogger("CourseEmbed")
         self._re = re.compile(r"\[(\D+)(\w+)\]")
         self._courses = {}
 
-        with open(os.path.join(manifest["path"], "listings.json")) as f:
-            listings = json.load(f)
-        for dep, url in listings.items():
-            self._parse_listings(url, dep)
+        if os.path.isfile(os.path.join(manifest["path"], "courses.json")):
+            with open(os.path.join(manifest["path"], "courses.json")) as f:
+                self._courses = json.load(f)
+            self._logger.info("Loaded courses.")
+        else:
+            self._logger.warning("No courses saved, generating now. This will take a while.")
+            with open(os.path.join(manifest["path"], "listings.json")) as f:
+                listings = json.load(f)
+            for dep, url in listings.items():
+                self._logger.info(f"Retrieving {dep} from {url}...")
+                self._parse_listings(url, dep)
+            with open(os.path.join(manifest["path"], "courses.json"), "w") as f:
+                json.dump(self._courses, f)
+            self._logger.info("Courses generated.")
 
         self.bot.register_handler("message", self.handle_message)
 
@@ -31,9 +43,13 @@ class CourseEmbed(GarfieldPlugin):
         soup = BeautifulSoup(resp.text, features="lxml")
         course_divs = soup.find_all("div", {"class": "course"})
         for course_div in course_divs:
+            # print(course_div.getText())
             number = course_div.find("p", {"class": "courseNumber"}).getText().strip()
             name = course_div.find("p", {"class": "courseTitle"}).getText().strip()
-            desc = course_div.find("div", {"class": "courseDesc"}).find("p").getText().strip()
+            try:
+                desc = course_div.find("div", {"class": "courseDesc"}).find("p").getText().strip()
+            except AttributeError:
+                desc = ""
             attrs = []
             for attr in course_div.find_all("p", {"class": "courseAttrs"}):
                 attr_text = attr.getText().strip()
