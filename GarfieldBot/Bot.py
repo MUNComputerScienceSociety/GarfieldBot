@@ -95,7 +95,7 @@ class Bot(object):
             threading.Thread(
                 target=self._commands[command_name],
                 args=(event, *(args[1:]))
-            )
+            ).start()
 
     def register_handler(self, type: str, handler: Callable[[SlackEvent], None]) -> None:
         """
