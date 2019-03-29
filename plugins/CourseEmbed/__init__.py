@@ -29,8 +29,13 @@ class CourseEmbed(GarfieldPlugin):
             with open(os.path.join(manifest["path"], "listings.json")) as f:
                 listings = json.load(f)
             for dep, url in listings.items():
-                self._logger.info(f"Retrieving {dep} from {url}...")
-                self._parse_listings(url, dep)
+                if isinstance(url, list):
+                    for listing_url in url:
+                        self._logger.info(f"Retrieving {dep} from {listing_url}...")
+                        self._parse_listings(listing_url, dep)
+                else:
+                    self._logger.info(f"Retrieving {dep} from {url}...")
+                    self._parse_listings(url, dep)
             with open(os.path.join(manifest["path"], "courses.json"), "w") as f:
                 json.dump(self._courses, f)
             self._logger.info("Courses generated.")
@@ -38,7 +43,8 @@ class CourseEmbed(GarfieldPlugin):
         self.bot.register_handler("message", self.handle_message)
 
     def _parse_listings(self, url: str, department: str) -> None:
-        self._courses[department] = {}
+        if department not in self._courses:
+            self._courses[department] = {}
         resp = requests.get(url)
         soup = BeautifulSoup(resp.text, features="lxml")
         course_divs = soup.find_all("div", {"class": "course"})
