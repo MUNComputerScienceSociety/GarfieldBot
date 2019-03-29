@@ -50,7 +50,10 @@ class CourseEmbed(GarfieldPlugin):
         course_divs = soup.find_all("div", {"class": "course"})
         for course_div in course_divs:
             # print(course_div.getText())
-            number = course_div.find("p", {"class": "courseNumber"}).getText().strip()
+            try:
+                number = course_div.find("p", {"class": "courseNumber"}).getText().strip()
+            except AttributeError:
+                continue
             name = course_div.find("p", {"class": "courseTitle"}).getText().strip()
             try:
                 desc = course_div.find("div", {"class": "courseDesc"}).find("p").getText().strip()
