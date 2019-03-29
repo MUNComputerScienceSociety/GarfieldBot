@@ -92,7 +92,10 @@ class Bot(object):
         command_name = command_text.split(" ")[0]
         if command_name in self._commands:
             args = shlex.split(command_text)
-            self._commands[command_name](event, *(args[1:]))
+            threading.Thread(
+                target=self._commands[command_name],
+                args=(event, *(args[1:]))
+            )
 
     def register_handler(self, type: str, handler: Callable[[SlackEvent], None]) -> None:
         """
@@ -153,12 +156,13 @@ class Bot(object):
         except KeyError:
             return None
 
-    def send_message(self, channel: Union[Channel, str], text: str) -> None:
+    def send_message(self, channel: Union[Channel, str], text: str, **kwargs) -> None:
         """
         Sends a message to a given Slack channel.
 
         :param channel: Either the ID of the channel to send to, or a channel object.
         :param text: The text to send.
+        :param kwargs: Any additional arguments to send.
         """
         if isinstance(channel, Channel):
             channel = channel.id
@@ -166,7 +170,8 @@ class Bot(object):
         self.client.api_call(
             "chat.postMessage",
             channel=channel,
-            text=text
+            text=text,
+            **kwargs
         )
 
     def start(self) -> None:
