@@ -1,3 +1,7 @@
+# NOTE: Replaced with https://github.com/MUNComputerScienceSociety/Automata since we're using Discord instead of Slack as of 2019
+
+---
+
 # GarfieldBot
 
 A multi-purpose Slack bot for the MUN Computer Science Society Slack.
